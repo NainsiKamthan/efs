@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'crispy_forms',
     'rest_framework',
     'mathfilters',
-    'django.contrib.humanize'
+    'django.contrib.humanize',
+    'easy_pdf',
 ]
 
 MIDDLEWARE = [

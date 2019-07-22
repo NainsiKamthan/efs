@@ -8,8 +8,10 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from .serializers import CustomerSerializer
-
-
+from django.http import HttpResponse
+from django.template.loader import get_template
+from easy_pdf.rendering import render_to_pdf
+from django.views.generic import View
 
 # Create your views here.
 
@@ -137,13 +139,63 @@ def investment_delete(request, pk):
     return redirect('portfolio:investment_list')
 
 @login_required
+def mutualfund_list(request):
+    mutualfunds = Mutualfund.objects.filter()
+    return render(request, 'portfolio/mutualfund_list.html' , {'mutualfunds': mutualfunds})
+
+
+@ login_required
+def mutualfund_new(request):
+    if request.method == "POST" :
+        form = MutualfundForm(request.POST)
+        if form.is_valid():
+            mutualfund = form.save(commit=False)
+            mutualfund.created_date = timezone.now()
+            mutualfund.save()
+            mutualfunds = Mutualfund.objects.filter()
+            return render(request, 'portfolio/mutualfund_list.html', {'mutualfunds': mutualfunds})
+    else :
+        form = MutualfundForm()
+        # print("Else")
+        return render(request, 'portfolio/mutualfund_new.html', {'form': form})
+
+
+@ login_required
+def mutualfund_edit(request, pk):
+    mutualfund = get_object_or_404(Mutualfund, pk=pk)
+    if request.method == "POST":
+        form = MutualfundForm(request.POST, instance=mutualfund)
+        if form.is_valid():
+            mutualfund = form.save()
+           # investment.customer = investment.id
+            mutualfund.updated_date = timezone.now()
+            mutualfund.save()
+            mutualfunds = Mutualfund.objects.filter()
+            return render(request, 'portfolio/mutualfund_list.html', {'mutualfunds': mutualfunds})
+    else:
+        # print("else")
+        form = MutualfundForm(instance=mutualfund)
+        return render(request, 'portfolio/mutualfund_edit.html', {'form': form})
+
+
+@ login_required
+def mutualfund_delete(request, pk):
+    mutualfund = get_object_or_404(Mutualfund, pk =pk)
+    mutualfund.delete()
+    mutualfunds = Mutualfund.objects.filter()
+    return render(request, 'portfolio/mutualfund_list.html', { 'mutualfunds': mutualfunds})
+
+@login_required
 def portfolio(request,pk):
     customer = get_object_or_404(Customer, pk=pk)
     customers = Customer.objects.filter(created_date__lte=timezone.now())
     investments =Investment.objects.filter(customer=pk)
     stocks = Stock.objects.filter(customer=pk)
+    mutualfunds = Mutualfund.objects.filter(customer=pk)
     sum_recent_value = Investment.objects.filter(customer=pk).aggregate(Sum('recent_value'))
     sum_acquired_value = Investment.objects.filter(customer=pk).aggregate(Sum('acquired_value'))
+    sum_mutual_acquired_value = Mutualfund.objects.filter(customer=pk).aggregate(Sum('acquired_value'))
+    sum_mutual_recent_value = Mutualfund.objects.filter(customer=pk).aggregate(Sum('recent_value'))
    #overall_investment_results = sum_recent_value-sum_acquired_value
    # Initialize the value of the stocks
     sum_current_stocks_value = 0
@@ -157,10 +209,14 @@ def portfolio(request,pk):
     return render(request, 'portfolio/portfolio.html', {'customers': customers,
                                                         'investments': investments,
                                                         'stocks': stocks,
+                                                        'mutualfunds': mutualfunds,
                                                         'sum_acquired_value': sum_acquired_value,
                                                         'sum_recent_value': sum_recent_value,
                                                         'sum_current_stocks_value': sum_current_stocks_value,
-                                                        'sum_of_initial_stock_value': sum_of_initial_stock_value,})
+                                                        'sum_of_initial_stock_value': sum_of_initial_stock_value,
+                                                        'sum_mutual_acquired_value': sum_mutual_acquired_value,
+                                                        'sum_mutual_recent_value': sum_mutual_recent_value,
+                                                        })
 
 # Lists all customers
 class CustomerList(APIView):
@@ -169,3 +225,62 @@ class CustomerList(APIView):
         customers_json = Customer.objects.all()
         serializer = CustomerSerializer(customers_json, many=True)
         return Response(serializer.data)
+
+@login_required()
+def pdf_portfolio(request, pk):
+        template = get_template('portfolio/pdf_portfolio.html')
+        customer = get_object_or_404(Customer, pk=pk)
+        customers = Customer.objects.filter(created_date__lte=timezone.now())
+        investments = Investment.objects.filter(customer=pk)
+        stocks = Stock.objects.filter(customer=pk)
+        mutualfunds = Mutualfund.objects.filter(customer=pk)
+        sum_recent_value = Investment.objects.filter(customer=pk).aggregate(Sum('recent_value'))
+        sum_acquired_value = Investment.objects.filter(customer=pk).aggregate(Sum('acquired_value'))
+        sum_mutual_acquired_value = Mutualfund.objects.filter(customer=pk).aggregate(Sum('acquired_value'))
+        sum_mutual_recent_value = Mutualfund.objects.filter(customer=pk).aggregate(Sum('recent_value'))
+        # overall_investment_results = sum_recent_value-sum_acquired_value
+        # Initialize the value of the stocks
+        sum_current_stocks_value = 0
+        sum_of_initial_stock_value = 0
+        for stock in stocks:
+            sum_current_stocks_value += stock.current_stock_value()
+            sum_of_initial_stock_value += stock.initial_stock_value()
+        context = {'customers': customers,
+                                                       'investments': investments,
+                                                       'stocks': stocks,
+                                                       'sum_acquired_value': sum_acquired_value,
+                                                       'sum_recent_value': sum_recent_value,
+                                                       'sum_current_stocks_value': sum_current_stocks_value,
+                                                       'sum_of_initial_stock_value': sum_of_initial_stock_value,
+                                                       'mutualfunds': mutualfunds,
+                                                       'sum_mutual_acquired_value': sum_mutual_acquired_value,
+                                                       'sum_mutual_recent_value': sum_mutual_recent_value,
+                                                       }
+        html = template.render(context)
+
+        # 'email_success': email_success})
+        pdf = render_to_pdf('portfolio/pdf_portfolio.html', context)
+        if pdf:
+            response = HttpResponse(pdf, content_type='application/pdf')
+            filename = 'pdf_portfolio_' + str(customer.name) + '.pdf'
+            content = "inline; filename='%s'" % (filename)
+            download = request.GET.get("download")
+            if download:
+                content = "attachment; filename='%s'" % (filename)
+            response['Content-Disposition'] = content
+            return response
+        return HttpResponse("not found")
+
+
+@login_required
+def generate_portfolio_pdf(request, pk, context):
+    customer = get_object_or_404(Customer, pk=pk)
+    template = get_template('portfolio/pdf_portfolio.html')
+
+    html = template.render(context)
+    pdf = render_to_pdf('portfolio/pdf_portfolio.html', context)
+    if pdf:
+        response = HttpResponse(pdf, content_type='application/pdf')
+        response['Content-Disposition'] = 'filename= "pdf_pdf_portfolio_{}.pdf"'.format(customer.name)
+        return pdf
+    return HttpResponse("Not Found")

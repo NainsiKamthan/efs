@@ -21,6 +21,11 @@ urlpatterns = [
     path('investment/<int:pk>/delete/', views.investment_delete, name='investment_delete'),
     path('customer/<int:pk>/portfolio/', views.portfolio, name='portfolio'),
     url(r'^customers_json/', views.CustomerList.as_view()),
+    path('customer/<int:pk>/pdf/', views.pdf_portfolio, name='pdf_portfolio'),
+    path('mutualfund_list', views.mutualfund_list, name='mutualfund_list'),
+    path('mutualfund/create/', views.mutualfund_new, name='mutualfund_new'),
+    path('mutuafund/<int:pk>/edit/', views.mutualfund_edit, name='mutualfund_edit'),
+    path('mutualfund/<int:pk>/delete/', views.mutualfund_delete, name='mutualfund_delete'),
 
 ]
 

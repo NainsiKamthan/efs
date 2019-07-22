@@ -1,8 +1,13 @@
-{% extends 'portfolio/base.html' %}
-{% block content %}
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+</head>
+<body>
 {% load mathfilters %}
 {% load humanize %}
-
 <div class="row">
     <h1 style="padding-left: 15Px">Customer Portfolio</h1>
 </div>
@@ -26,7 +31,7 @@
                     <td>{{ sum_recent_value.recent_value__sum |addition:sum_current_stocks_value|intcomma }}</td>
 
                     <td>{{sum_acquired_value.acquired_value__sum|add:sum_of_initial_stock_value|add:sum_recent_value.recent_value__sum |addition:sum_current_stocks_value|intcomma}}</td>
-
+                    <!--<td>{{ sum_recent_value|add:sum_current_stocks_value|add:sum_acquired_value|add:sum_of_initial_stock_value|intcomma }}</td>-->
                 </tr>
 
             </tbody>
@@ -199,11 +204,5 @@
             </tbody>
         </table>
     </div>
-
-
-<div class="col-md-6">
-<div class="form-check">
-
-</div>
-</div>
-{% endblock %}
+</body>
+</html>
