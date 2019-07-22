@@ -29,9 +29,7 @@
                 <tr>
                     <td>{{  sum_acquired_value.acquired_value__sum|add:sum_of_initial_stock_value|intcomma }}</td>
                     <td>{{ sum_recent_value.recent_value__sum |addition:sum_current_stocks_value|intcomma }}</td>
-
                     <td>{{sum_acquired_value.acquired_value__sum|add:sum_of_initial_stock_value|add:sum_recent_value.recent_value__sum |addition:sum_current_stocks_value|intcomma}}</td>
-                    <!--<td>{{ sum_recent_value|add:sum_current_stocks_value|add:sum_acquired_value|add:sum_of_initial_stock_value|intcomma }}</td>-->
                 </tr>
 
             </tbody>
@@ -120,7 +118,6 @@
                     <td>{{ investment.acquired_date }}</td>
                     <td>{{ investment.recent_value }}</td>
                     <td nowrap>{{ investment.recent_date }}</td>
-                    <!--<td>{{ sum_recent_value.recent_value__sum |addition:sum_acquired_value.acquired_value__sum|intcomma }}</td>-->
                     <td>{{ investment.recent_value|sub:investment.acquired_value }}</td>
 
                 </tr>

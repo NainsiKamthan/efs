@@ -246,16 +246,16 @@ def pdf_portfolio(request, pk):
             sum_current_stocks_value += stock.current_stock_value()
             sum_of_initial_stock_value += stock.initial_stock_value()
         context = {'customers': customers,
-                                                       'investments': investments,
-                                                       'stocks': stocks,
-                                                       'sum_acquired_value': sum_acquired_value,
-                                                       'sum_recent_value': sum_recent_value,
-                                                       'sum_current_stocks_value': sum_current_stocks_value,
-                                                       'sum_of_initial_stock_value': sum_of_initial_stock_value,
-                                                       'mutualfunds': mutualfunds,
-                                                       'sum_mutual_acquired_value': sum_mutual_acquired_value,
-                                                       'sum_mutual_recent_value': sum_mutual_recent_value,
-                                                       }
+                   'investments': investments,
+                   'stocks': stocks,
+                   'sum_acquired_value': sum_acquired_value,
+                   'sum_recent_value': sum_recent_value,
+                   'sum_current_stocks_value': sum_current_stocks_value,
+                   'sum_of_initial_stock_value': sum_of_initial_stock_value,
+                   'mutualfunds': mutualfunds,
+                   'sum_mutual_acquired_value': sum_mutual_acquired_value,
+                   'sum_mutual_recent_value': sum_mutual_recent_value,
+                   }
         html = template.render(context)
 
         # 'email_success': email_success})
